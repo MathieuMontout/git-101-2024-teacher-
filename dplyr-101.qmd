@@ -261,9 +261,40 @@ white_wine |>
 #the alcohol value is over dispersed when we compare it to a normal gaussian.
 ```
 
+### More complex summary functions
+Essentially 'quantiale()'
+
 ```{r}
+quantile(white_wine$`residual sugar`)
+#we have a vector with min value (0% = O,6), the max and median.
+#Robust statistics = stat that is hard to manipulate, like the median, even if we add an extreme value it won't modify substantially the median.
+```
+```{r}
+quantile(white_wine$`residual sugar`, probs = seq(0, 1, 0.1))
+
+```
+
+With summarize we can only specify one value whereas quantile is useful when we have more than one value.
+
+```{r}
+white_wine |>
+  summarise(quantile(`residual sugar`))
+
+```
+
+```{r}
+#official solution
+white_wine |>
+  reframe(quantile(`residual sugar`),
+          mean(`residual sugar`))
+```
 
 
+```{r}
+#We can also use this solution
+sugar_stats <- white_wine |>
+  summarise(list(quantile(`residual sugar`)),
+            mean(`residual sugar`))
 
 ```
 
