@@ -476,3 +476,106 @@ summarizing function turn collection of values into a single value.
 white_wine |> mutate(avg_alcohol_quality = mean(alcohol), .by = quality)
 ```
 
+#### group_by()
+
+```{r}
+white_wine |>
+  group_by(quality) #here we have an additional information that tells us that we our table is also Group (...)
+```
+
+```{r}
+white_wine |>
+  group_by(quality) |>
+  summarize(mean(`citric acid`))
+```
+
+we get the same thing by doing :
+```{r}
+white_wine |>
+  summarise(mean(`citric acid`), .by=quality)
+```
+
+group_by has other fonctionnalities that we can't use with the white_wine dataset, so we aregoing to change to the diamond dataset.
+.by is way to do quickly simple things
+
+
+```{r}
+diamonds |>
+  group_by(cut) |>
+  summarise(median(price))
+```
+now if we look at the effect of two variables on the median prize : 
+```{r}
+diamonds |>
+  group_by(cut, clarity) |>
+  summarise(median(price), .groups = "drop_last") |> #we had .groups because otherwise we would have an console/error message.
+  arrange(cut, clarity)
+
+# summarise function is going to "eat" one of the layer of the group_by, in our case summarise ate the layer 'clarity'.
+```
+
+```{r}
+diamonds |>
+  group_by(cut, clarity) |>
+  summarise(price_mc = median(price), .groups = "drop_last") |>
+  summarise(mean(price_mc))
+
+```
+
+```{r}
+diamonds |>
+  summarise(median(price), .by=c(cut, clarity)) |>
+  arrange(cut, clarity)
+#we get the same table as before, but as we can see it's not 'Groups'.
+#Moreover here the result isn't ordered (I think that's what he said).
+```
+
+
+
+We group by over a collection of variable.
+
+Why using  group_by? it's more efficient  in some cases like we cant to compute explicitly conditional distribution of multiple characterize variable (I wrote some bullshit).
+Group_by is particularly useful in situation where we have to count things.
+
+
+```{r}
+diamonds |>
+  group_by(cut, color) |>
+  summarise( N=n(), .groups = "drop_last" ) #we count the number of observation per group
+```
+
+
+
+```{r}
+diamonds |>
+  group_by(cut, color) |>
+  summarise( N=n(), .groups = "drop_last" ) |> #we count the number of observation per group
+  summarise(sum(N))
+```
+
+
+```{r}
+diamonds |>
+  group_by(cut, color) |>
+  summarise( N=n(), .groups = "drop_last" ) |> #we count the number of observation per group
+  mutate(prob=N/sum(N)) |>
+  ungroup() #This line is not mandatory, ungroup() is simply going to give us a table that isn't group over cut.
+```
+
+```{r}
+diamonds |>
+  summarise(N=n(), .by=c(cut, color)) |>
+  mutate(prob=N/sum(N), .by=cut) |>
+  arrange(cut, color)
+  
+  #7% is the proba of getting a diamond that is idealy cut in my data set
+```
+
+
+If we need to do one single summary (and we don't want the summary to be ordered) then it's not a good idea to use group_by.
+
+
+END OF DPLYR INTRODUCTION
+
+
+
