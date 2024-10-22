@@ -415,7 +415,7 @@ white_wine|>
 alcohol_quantile_2 <-
   white_wine |> 
   pull(alcohol) |>
-  quantile(probs = seq (0, 1, by = 0.1)) #in the case that we want 5 intervals.
+  quantile(probs = seq (0, 1, by = 0.1)) #in the case that we want 5 intervals. here we can remove the 'by' and it only means that we had O.1 to each intervals, not the same as '.by'
 alcohol_quantile_2
 
 ```
@@ -433,3 +433,46 @@ white_wine|>
   geom_bar(position = "fill")
 #we can see a quality effect.
 ```
+
+####Functions with a .by parameter 
+some dplyr verbs support the '.by' parameter : 
+
+reframe()
+summarise()
+mutate()
+slice_*()
+filter()
+```{r}
+white_wine |>
+  slice(1:5, .by = quality) |> ## first 5 rows per quality
+  select(1:2 |quality) ## first 2 columns (and quality)
+
+```
+
+
+
+```{r}
+white_wine |>
+  slice_sample(n = 1, by = quality) |> # gives us different value of random wine
+  select(1:2)
+
+```
+
+
+```{r}
+white_wine |>
+  slice_max(alcohol, by = quality) |> # gives us different value of random wine
+  select(alcohol |quality)
+#here we don't have collision in the sens in the quality five there's only one wine that has 13.6 as alcohol value but if there's was more than one then slice would give us al of the max value.
+
+#we use .by almost everywhere and only the slice_() we only write by.
+
+```
+
+we can use a summary function in mutate, mutate_by will give us a collection of values.
+summarizing function turn collection of values into a single value.
+
+```{r}
+white_wine |> mutate(avg_alcohol_quality = mean(alcohol), .by = quality)
+```
+
