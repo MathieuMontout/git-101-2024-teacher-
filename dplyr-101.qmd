@@ -298,3 +298,138 @@ sugar_stats <- white_wine |>
 
 ```
 
+
+### Group by
+####introduction
+```{r}
+white_wine|> 
+  summarise(median(`residual sugar`),
+            n(), #will give us the number of value that have been used to compute the median.
+            .by = quality ) |> 
+  arrange(quality) #we use that to order the quality from the lowest to the highest.
+
+#summarise split dataset into as many subset as they are quality value, it compute for each of the substet the median.
+```
+
+```{r}
+white_wine|> 
+  summarise(median(`residual sugar`),
+            n(), #will give us the number of value that have been used to compute the median.
+            .by = alcohol ) |> 
+  arrange(alcohol) 
+
+#summarise split dataset into as many subset as they are quality value, it compute for each of the substet the median.
+```
+
+
+#quantizing numerical variable
+```{r}
+#we group over two things alcohol and residual sugar
+white_wine|>
+  mutate(ha = alcohol >= 13) |>
+  summarise(median(`residual sugar`),
+            n(), 
+            .by = ha)
+```
+
+```{r}
+#cut() slice numerical value into (...) based on intervals
+#the lowest value has to be less than the average
+#cut is always producing factors (discrete variable)
+white_wine|>
+  mutate(alcohol_class = cut(alcohol, breaks = c(7,9,10,12,13,15), ordered_result = TRUE) ) |>
+  summarise(median(`residual sugar`),
+            n(), 
+            .by = alcohol_class)
+```
+
+# 22/10/24
+
+
+
+```{r}
+white_wine|>
+  mutate(alcohol_class = cut(alcohol, breaks = c(7,9,10,12,13,15), ordered_result = TRUE) ) |>
+  ggplot(aes(x = alcohol_class)) +
+  geom_bar()
+#the  fact of having small classes can blur the result that we are going to have in the following examples.
+```
+
+```{r}
+ggplot(white_wine, aes(x=alcohol, y = quality))+
+  geom_boxplot()
+#shows the conditional distribution of alcohol given quality (alcohol is conitnuous so we can't look for the invesrse)
+```
+
+```{r}
+white_wine|>
+  mutate(alcohol_class = cut(alcohol, breaks = c(7,9,10,12,13,15), ordered_result = TRUE) ) |>
+  ggplot(aes(x = alcohol_class, fill = quality)) +
+  geom_bar()
+#conditional distribution of quality given the alcohol class. the quality nine seems to have a high value of alcohol in the first graph (above) and we see the quality nine in the class [12,13].
+
+#when we want to study the effect of a variable on another one we have to create classes to see what is happening (except if the other variable is continuous).
+```
+
+
+to have different classes we can use the function quantile()
+
+
+
+
+```{r}
+alcohol_quantile <-
+  white_wine |> 
+  pull(alcohol) |>
+  quantile(probs = seq (0, 1, by = 0.2)) #in the case that we want 5 intervals.
+alcohol_quantile
+
+```
+
+
+```{r}
+#way to modify the content of a vector/ list :
+alcohol_quantile[1] <- alcohol_quantile[1] - 1 #we do that because otherwise some value won't be taken by the lower bound
+alcohol_quantile
+```
+
+```{r}
+white_wine|>
+  mutate(alcohol_class = cut(alcohol, breaks = alcohol_quantile, ordered_result = TRUE) ) |>
+  ggplot(aes(x = alcohol_class)) +
+  geom_bar()
+#not perfect because there are equalities in the quantiles.
+```
+
+```{r}
+white_wine|>
+  mutate(alcohol_class = cut(alcohol, breaks = alcohol_quantile, ordered_result = TRUE) ) |>
+  ggplot(aes(x = alcohol_class, fill = quality)) +
+  geom_bar(position = "fill")
+#we can see a quality effect.
+```
+
+
+
+```{r}
+alcohol_quantile_2 <-
+  white_wine |> 
+  pull(alcohol) |>
+  quantile(probs = seq (0, 1, by = 0.1)) #in the case that we want 5 intervals.
+alcohol_quantile_2
+
+```
+
+
+```{r}
+#way to modify the content of a vector/ list :
+alcohol_quantile_2[1] <- alcohol_quantile_2[1] - 1 #we do that because otherwise some value won't be taken by the lower bound
+alcohol_quantile_2
+```
+```{r}
+white_wine|>
+  mutate(alcohol_class = cut(alcohol, breaks = alcohol_quantile_2, ordered_result = TRUE) ) |>
+  ggplot(aes(x = alcohol_class, fill = quality)) +
+  geom_bar(position = "fill")
+#we can see a quality effect.
+```
