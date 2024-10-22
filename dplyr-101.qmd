@@ -579,3 +579,166 @@ END OF DPLYR INTRODUCTION
 
 
 
+
+
+
+##Tidying data
+the goal of this package is 'pivoting' when we have a dataset that is too long and too wide, we want to switch from a long format to a large format.
+```{r}
+library(tidyr)
+```
+
+
+### Long to wide table (pivoting)
+
+```{r}
+ color_given_cut<-
+  diamonds |>
+  group_by(cut, color) |>
+  summarise( N=n(), .groups = "drop_last" ) |> 
+  mutate(prob=N/sum(N)) |>
+  ungroup() 
+```
+
+
+```{r}
+View(color_given_cut)
+```
+
+```{r}
+color_given_cut |>
+  select(!N) |>#in color_given_cut we select everything except N 
+  slice_sample(n = 30) |>
+  pivot_wider(id_cols = cut, 
+              names_from = color, 
+              values_from = prob)
+#pivoting is based on the idea that we have a collection of object, and the object havebeen spreaded over different rows, the canonical table that we want to turn wider is a table that have 3 rows.
+```
+### Wide to long  table (pivoting)
+
+```{r}
+data("world_bank_pop")
+#there's an implicit variable here that is time
+```
+
+
+
+```{r} 
+world_bank_pop|>
+  filter(indicator == "SP.POP.TOTL") |>
+  select(!indicator)|>
+  pivot_longer(!country) |> # country is going to be an identifier
+  filter(country == "USA")
+```
+
+
+```{r} 
+world_bank_pop|>
+  filter(indicator == "SP.POP.TOTL") |>
+  select(!indicator)|>
+  pivot_longer(!country) |> # country is going to be an identifier
+  filter(country == "ESP")|>
+  ggplot(aes(x=name, y=value, color=country))+
+  geom_line()+
+  theme(legend.position = "none")
+
+```
+
+
+
+```{r} 
+world_bank_pop|>
+  filter(indicator == "SP.POP.TOTL") |>
+  filter(country %in% c("ESP", "FRA")) |>
+  select(!indicator)
+
+```
+
+
+
+```{r} 
+world_bank_pop|>
+  filter(indicator == "SP.POP.TOTL") |>
+  filter(country %in% c("ESP", "FRA")) |>
+  select(!indicator)|>
+pivot_longer(!country)
+#we turn rows into columns
+```
+
+
+
+```{r} 
+world_bank_pop|>
+  filter(country %in% c("ESP", "FRA")) |>
+pivot_longer(!country & !indicator)
+#we turn rows into columns
+```
+
+
+```{r} 
+world_bank_pop|>
+  filter(indicator == "SP.POP.TOTL") |>
+  select(!indicator)|>
+  pivot_longer(!country, 
+               names_to = "year", 
+               names_transform =  as.integer,
+               values_to = "total population")
+#we turn rows into columns
+```
+
+
+
+```{r} 
+world_bank_pop|>
+  filter(indicator == "SP.POP.TOTL") |>
+  select(!indicator)|>
+  pivot_longer(!country, 
+               names_to = "year", 
+               names_transform =  as.integer,
+               values_to = "total population")|>
+  filter(country == "ESP") |>
+  ggplot(aes(x=year, y=`total population`)) +
+  geom_line()
+```
+
+
+
+```{r} 
+world_bank_pop|>
+  filter(indicator == "SP.POP.TOTL") |>
+  select(!indicator)|>
+  pivot_longer(!country, 
+               names_to = "year", 
+               names_transform =  as.integer,
+               values_to = "total population")|>
+  ggplot(aes(x=year, y=`total population`, color=country)) +
+  geom_line()+
+  theme(legend.position = "none") +
+  scale_y_continuous(transform = "log10")
+```
+
+if we slice after pivoting we are going to remove some elements but not a full country.
+
+
+
+
+```{r} 
+set.seed(42)#way to fix the randomness
+world_bank_pop|>
+  filter(indicator == "SP.POP.TOTL") |>
+  select(!indicator)|>
+  filter(!is.na(`2000`))|>
+  slice_sample(n=10, weight_by = `2000`) |> #wieght_by gives us the weight that we want to assign to each, here pop of 2000 is going to be the weight so I'll more likely to get large country.
+  pivot_longer(!country, 
+               names_to = "year", 
+               names_transform =  as.integer,
+               values_to = "total population")|>
+  ggplot(aes(x=year, y=`total population`, color=country)) +
+  geom_line()+
+  theme(legend.position = "none") +
+  scale_y_continuous(transform = "log10")
+```
+
+
+
+
