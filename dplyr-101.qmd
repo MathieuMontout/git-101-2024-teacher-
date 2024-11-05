@@ -742,3 +742,116 @@ world_bank_pop|>
 
 
 
+
+## Nesting
+
+```{r}
+df_list<- tibble(
+  x=1:3,
+  y=letters[1:3],
+  z=list(c(1,2),2,3) # here we've a list that contain 3 vectors
+                 )
+
+df_list
+#in a list we can have a column that has elements of different types
+#ex : 
+```
+
+```{r}
+daf_list<- tibble(
+  x=1:3,
+  y=letters[1:3],
+  z=list(c(1,2),c("Pewd", "Kanye"),3) # here we've a list that contain 3 vectors
+                 )
+
+daf_list
+```
+
+```{r}
+daf_list<- data.frame(
+  x=1:3,
+  y=letters[1:3],
+  z=list(c(1,2),c("Pewd", "Kanye"),3) # here we've a list that contain 3 vectors
+                 )
+
+daf_list
+```
+
+###Linear models
+```{r}
+diamond<- diamonds
+```
+
+```{r}
+#target var => what we want to predict, and then we specify the explaining variables
+diamond_price_lm<- lm(price~., data = diamond) #here we say that we want price must be model by all of the variables including the intercept (constant)
+```
+
+```{r}
+summary(diamond_price_lm)
+#most of the coefficients are significant
+```
+
+```{r}
+plot(diamond_price_lm)
+```
+
+Linear model are additive
+
+we want to create a linear model for the subset of diamond data set that are identified by the diamond cut (I think)
+```{r}
+#|cache: true
+diamonds_price_cut_lm<-diamond|>
+  nest(.by = cut)|>   #for each of the group we get a data tibble because we nest.
+  mutate(sub_lm=lapply(data,\(x)lm(price~.,data=x))) #take x as an input to call the linear model.
+```
+
+
+Nesting we take a data frame cut it into pieces and then we put it in...
+```{r}
+library(broom)
+diamonds_price_cut_lm<-
+  diamonds_price_cut_lm|>mutate(tlm = lapply(sub_lm,tidy))
+  
+```
+
+
+
+```{r}
+diamond|>
+  nest(.by=cut)|>
+  unnest(data)
+```
+
+
+```{r}
+diamonds_price_cut_lm |>
+  select(cut,tlm)|>
+  unnest(tlm)
+```
+
+```{r}
+diamonds_price_cut_lm |>
+  select(cut,tlm)|>
+  unnest(tlm)|>
+  select(cut,term,estimate)|>
+  pivot_wider(
+    names_from = term,
+    values_from = estimate
+  )
+```
+
+```{r}
+diamonds_price_cut_lm |>
+  select(cut,tlm)|>
+  unnest(tlm)|>
+  filter(p.value<0.01)|>#we want to keep only the significant coefficient, by doing that we remove the rows for which the coefficient are not significant
+  select(cut,term,estimate)|>
+  pivot_wider(
+    names_from = term,
+    values_from = estimate
+  )
+```
+
+
+
